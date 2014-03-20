@@ -6,7 +6,7 @@ LIBS       = -lncurses
 
 CC        ?= gcc
 
-CFLAGS_    = -g -Wall $(OPTIMIZE) $(DEFS)
+CFLAGS_    = -g -Wall $(OPTIMIZE) $(DEFS) $(CFLAGS)
 LDFLAGS    =
 
 all: $(PROJECT)
