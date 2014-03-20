@@ -4,21 +4,18 @@ OPTIMIZE   = -Os
 DEFS       =
 LIBS       = -lncurses
 
-CC         = gcc
+CC        ?= gcc
 
-CFLAGS     = -g -Wall $(OPTIMIZE) $(DEFS)
+CFLAGS_    = -g -Wall $(OPTIMIZE) $(DEFS)
 LDFLAGS    =
 
 all: $(PROJECT)
 
 $(PROJECT): main.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
-
-#main.o: main.c
-#	$(CC) $(CFLAGS) -o $@ -c $^ $(LIBS)
+	$(CC) $(CFLAGS_) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 %.o: %.c
-	$(CC) $(CFLAGS) -o $@ -c $^
+	$(CC) $(CFLAGS_) -o $@ -c $^
 
 clean:
 	rm -f $(PROJECT) *.o *~
