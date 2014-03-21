@@ -117,8 +117,12 @@ int main(void)
         {
             goto death;
         }
-        usleep(SPEED);
+        mvprintw(LINES-1, 0, "Score: ");
+        attron(A_BOLD);
+        printw("%d", flappy.score);
+        attroff(A_BOLD);
     }
+
 death:
     death_message(LINES/2, COLS/2, flappy.score);
     timeout(0);

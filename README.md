@@ -9,7 +9,6 @@ failthful port of Flappy Bird.
 Currently missing the current minor features:
 
 * Restart on death
-* Score printing as you go
 * Proper pipe generation (currently come out in "chunks")
 * High score keeping
 
