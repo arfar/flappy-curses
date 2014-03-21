@@ -6,9 +6,8 @@ Flappy Bird with the ncurses library.
 This is more of an exercise to learn roughly how ncurses works rather than a
 failthful port of Flappy Bird.
 
-Currently missing the current MAJOR features:
+Currently missing the current minor features:
 
-* Collision detection
 * Restart on death
 * Score printing as you go
 * Proper pipe generation (currently come out in "chunks")

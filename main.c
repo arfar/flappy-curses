@@ -11,6 +11,8 @@
 #include <ncurses.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <time.h>
 
 #define ESC_KEY          27
 
@@ -19,7 +21,7 @@
 #define PIPE_WIDTH       10
 #define GRAVITY          1.0
 #define SPEED            60 // Time in ms it will wait for your input
-#define FLAPPY_X_OFFSET  20
+#define FLAPPY_X_POS     20
 
 struct pipe_pair
 {
@@ -50,6 +52,7 @@ int  draw_pipes(struct pipe_pair *pipes, unsigned int num_pipes,
 int main(void)
 {
     char ch;
+    int i;
     unsigned int num_pipes;
     struct pipe_pair *pipes;
     struct bird flappy;
@@ -57,6 +60,7 @@ int main(void)
     initscr(); cbreak(); noecho(); // Just the usual
     curs_set(0);  // Disables displaying the cursor
     keypad(stdscr, TRUE);
+    srand(time(NULL));
 
     num_pipes = COLS/PIPE_X_GAP;
 
@@ -77,9 +81,12 @@ int main(void)
 
     timeout(SPEED);
 
-    while((ch = getch()) != ESC_KEY)
+    while((ch = getch()))
     {
-        if (ch != ERR)
+        if (ch == ESC_KEY)
+            goto death;
+
+        else if (ch != ERR)
             flappy.upward_speed = 3.0;
 
         flappy.upward_speed -= GRAVITY;
@@ -89,15 +96,31 @@ int main(void)
 
         flappy.height -= flappy.upward_speed;
 
+
         flappy.window = draw_flappy_bird(flappy.height, flappy.window);
+        flappy.score += draw_pipes(pipes, num_pipes, LINES, COLS);
+
+        for (i = 0; i < num_pipes; i++)
+        {
+            if ((pipes[i].pos_x - PIPE_WIDTH/2) <= FLAPPY_X_POS+2 &&
+                (pipes[i].pos_x + PIPE_WIDTH/2) >= FLAPPY_X_POS)
+            { // +2 for the "head" of flappy
+                if (flappy.height <= (pipes[i].pos_y - PIPE_Y_GAP) ||
+                    (flappy.height+1) >= (pipes[i].pos_y + PIPE_Y_GAP))
+                { // +1 for "bottom" of flappy
+                    goto death;
+                }
+            }
+        }
 
         if (flappy.height <= 0 || flappy.height >= LINES)
         {
-            death_message(LINES/2, COLS/2, flappy.score);
-            break;
+            goto death;
         }
-        flappy.score += draw_pipes(pipes, num_pipes, LINES, COLS);
+        usleep(SPEED);
     }
+death:
+    death_message(LINES/2, COLS/2, flappy.score);
     timeout(0);
 
     endwin();
@@ -209,7 +232,7 @@ WINDOW *draw_flappy_bird(int flappy_height, WINDOW *flappy_win)
         wrefresh(flappy_win);
         delwin(flappy_win);
     }
-    flappy_win = newwin(3, 3, flappy_height, FLAPPY_X_OFFSET);
+    flappy_win = newwin(3, 3, flappy_height, FLAPPY_X_POS);
     mvwprintw(flappy_win, 0, 0, " A ");
     mvwprintw(flappy_win, 1, 0, "BRD");
     wrefresh(flappy_win);
@@ -227,7 +250,7 @@ void death_message(int starty, int startx, unsigned int score)
     };
     int width, height;
 
-    timeout(-1);
+    timeout(0);
 
     // Ugly compile time string lengths
     width = sizeof("Press ESC to quit or any button to try again") / sizeof(char);
