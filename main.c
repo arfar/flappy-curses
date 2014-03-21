@@ -106,7 +106,7 @@ int main(void)
                 (pipes[i].pos_x + PIPE_WIDTH/2) >= FLAPPY_X_POS)
             { // +2 for the "head" of flappy
                 if (flappy.height-4 <= (pipes[i].pos_y - PIPE_Y_GAP) ||
-                    (flappy.height+7) >= (pipes[i].pos_y + PIPE_Y_GAP))
+                    (flappy.height+4) >= (pipes[i].pos_y + PIPE_Y_GAP))
                 { // +1 for "bottom" of flappy
                     goto death;
                 }
@@ -173,7 +173,7 @@ int draw_pipes(struct pipe_pair *pipes, unsigned int num_pipes,
         delwin(pipes[i].bottom_window);
 
         pipes[i].pos_x -= 1;
-        if (pipes[i].pos_x == 17)
+        if (pipes[i].pos_x == (FLAPPY_X_POS - (PIPE_WIDTH/2) - 1))
         {
             passed = 1;
         }
