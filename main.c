@@ -40,19 +40,19 @@ struct bird
     float upward_speed;
 };
 
-
+char run_game(struct bird flappy, struct pipe_pair *pipes,
+              unsigned int num_pipes);
+void clear_pipes(struct pipe_pair *pipes, int num_pipes);
 void welcome_message(int starty, int startx);
-void death_message(int starty, int startx, unsigned int score);
+char death_message(int starty, int startx, unsigned int score);
 WINDOW *draw_flappy_bird(int flappy_height, WINDOW *flappy_win);
 void init_pipes(struct pipe_pair *pipes, unsigned int num_pipes,
                 int lines, int coles);
-int  draw_pipes(struct pipe_pair *pipes, unsigned int num_pipes,
+int draw_pipes(struct pipe_pair *pipes, unsigned int num_pipes,
                 int lines, int cols);
 
 int main(void)
 {
-    char ch;
-    int i;
     unsigned int num_pipes;
     struct pipe_pair *pipes;
     struct bird flappy;
@@ -66,6 +66,24 @@ int main(void)
 
     pipes = (struct pipe_pair *) malloc(sizeof(struct pipe_pair) * num_pipes);
 
+    refresh();
+    welcome_message(LINES/2, COLS/2);
+
+    while(run_game(flappy, pipes, num_pipes) != ESC_KEY)
+        continue;
+
+    refresh();
+    endwin();
+    return 0;
+}
+
+char run_game(struct bird flappy, struct pipe_pair *pipes, unsigned int num_pipes)
+{
+    char ch;
+    int i;
+
+    timeout(SPEED);
+
     init_pipes(pipes, num_pipes, LINES, COLS);
 
     flappy.height = LINES/2;
@@ -77,22 +95,19 @@ int main(void)
 
     refresh();
 
-    welcome_message(LINES/2, COLS/2);
-
-    timeout(SPEED);
 
     while((ch = getch()))
     {
-        if (ch == ESC_KEY)
+        if(ch == ESC_KEY)
             goto death;
 
-        else if (ch != ERR)
+        else if(ch != ERR)
             flappy.upward_speed = 3.0;
 
         flappy.upward_speed -= GRAVITY;
 
-        if (flappy.upward_speed <= -5.0)
-            flappy.upward_speed = -5.0;
+        if(flappy.upward_speed <= -5.0)
+           flappy.upward_speed = -5.0;
 
         flappy.height -= flappy.upward_speed;
 
@@ -100,20 +115,20 @@ int main(void)
         flappy.window = draw_flappy_bird(flappy.height, flappy.window);
         flappy.score += draw_pipes(pipes, num_pipes, LINES, COLS);
 
-        for (i = 0; i < num_pipes; i++)
+        for(i = 0; i < num_pipes; i++)
         {
-            if ((pipes[i].pos_x - PIPE_WIDTH/2) <= FLAPPY_X_POS+2 &&
-                (pipes[i].pos_x + PIPE_WIDTH/2) >= FLAPPY_X_POS)
+            if((pipes[i].pos_x - PIPE_WIDTH/2) <= FLAPPY_X_POS+2 &&
+               (pipes[i].pos_x + PIPE_WIDTH/2) >= FLAPPY_X_POS)
             { // +2 for the "head" of flappy
-                if (flappy.height-4 <= (pipes[i].pos_y - PIPE_Y_GAP) ||
-                    (flappy.height+4) >= (pipes[i].pos_y + PIPE_Y_GAP))
+                if(flappy.height-4 <= (pipes[i].pos_y - PIPE_Y_GAP) ||
+                   (flappy.height+4) >= (pipes[i].pos_y + PIPE_Y_GAP))
                 { // +1 for "bottom" of flappy
                     goto death;
                 }
             }
         }
 
-        if (flappy.height <= 0 || flappy.height >= LINES)
+        if(flappy.height <= 0 || flappy.height >= LINES)
         {
             goto death;
         }
@@ -124,19 +139,17 @@ int main(void)
     }
 
 death:
-    death_message(LINES/2, COLS/2, flappy.score);
-    timeout(0);
-
-    endwin();
-    return 0;
+    ch = death_message(LINES/2, COLS/2, flappy.score);
+    clear_pipes(pipes, num_pipes);
+    return ch;
 }
 
 /* Would like a semi-open interval [min, max) */
 /* Stolen from https://stackoverflow.com/questions/2509679/how-to-generate-a-random-number-from-within-a-range#6852396 */
-int random_in_range (unsigned int min, unsigned int max)
+int random_in_range(unsigned int min, unsigned int max)
 {
     int base_random = rand(); /* in [0, RAND_MAX] */
-    if (RAND_MAX == base_random) return random_in_range(min, max);
+    if(RAND_MAX == base_random) return random_in_range(min, max);
 
     /* now guaranteed to be in [0, RAND_MAX) */
     int range       = max - min,
@@ -145,13 +158,28 @@ int random_in_range (unsigned int min, unsigned int max)
 
     /* There are range buckets, plus one smaller interval
        within remainder of RAND_MAX */
-    if (base_random < RAND_MAX - remainder)
+    if(base_random < RAND_MAX - remainder)
     {
         return min + base_random/bucket;
     }
     else
     {
-        return random_in_range (min, max);
+        return random_in_range(min, max);
+    }
+}
+
+
+void clear_pipes(struct pipe_pair *pipes, int num_pipes)
+{
+    int i;
+    for(i = 0; i < num_pipes; i++)
+    {
+        werase(pipes[i].top_window);
+        werase(pipes[i].bottom_window);
+        wrefresh(pipes[i].top_window);
+        wrefresh(pipes[i].bottom_window);
+        delwin(pipes[i].top_window);
+        delwin(pipes[i].bottom_window);
     }
 }
 
@@ -163,22 +191,16 @@ int draw_pipes(struct pipe_pair *pipes, unsigned int num_pipes,
 {
     int i;
     int passed = 0;
-    for (i = 0; i < num_pipes; i++)
+    clear_pipes(pipes, num_pipes);
+    for(i = 0; i < num_pipes; i++)
     {
-        werase(pipes[i].top_window);
-        werase(pipes[i].bottom_window);
-        wrefresh(pipes[i].top_window);
-        wrefresh(pipes[i].bottom_window);
-        delwin(pipes[i].top_window);
-        delwin(pipes[i].bottom_window);
-
         pipes[i].pos_x -= 1;
-        if (pipes[i].pos_x == (FLAPPY_X_POS - (PIPE_WIDTH/2) - 1))
+        if(pipes[i].pos_x == (FLAPPY_X_POS - (PIPE_WIDTH/2) - 1))
         {
             passed = 1;
         }
 
-        if (pipes[i].pos_x <= 0)
+        if(pipes[i].pos_x <= 0)
         {
             pipes[i].pos_x = cols + PIPE_X_GAP;
             pipes[i].pos_y = random_in_range(10, lines - 10);
@@ -208,7 +230,7 @@ void init_pipes(struct pipe_pair *pipes, unsigned int num_pipes,
                 int lines, int cols)
 {
     int i;
-    for (i = 0; i < num_pipes; i++)
+    for(i = 0; i < num_pipes; i++)
     {
         pipes[i].pos_x = cols/2 + (PIPE_X_GAP * i);
         pipes[i].pos_y = random_in_range(10, lines - 10);
@@ -230,7 +252,7 @@ void init_pipes(struct pipe_pair *pipes, unsigned int num_pipes,
 
 WINDOW *draw_flappy_bird(int flappy_height, WINDOW *flappy_win)
 {
-    if (flappy_win != NULL)
+    if(flappy_win != NULL)
     {
         werase(flappy_win);
         wrefresh(flappy_win);
@@ -243,18 +265,18 @@ WINDOW *draw_flappy_bird(int flappy_height, WINDOW *flappy_win)
     return flappy_win;
 }
 
-void death_message(int starty, int startx, unsigned int score)
+char death_message(int starty, int startx, unsigned int score)
 {
+    char ch;
     WINDOW *death_win;
     char *death_message[] = {
         "                 You have died              ",
         "               Your score was ",
-      //"Press ESC to quit or any button to try again",
-        "       Thanks for playing! ESC to quit      "
+        "Press ESC to quit or any button to try again",
     };
     int width, height;
 
-    timeout(0);
+    timeout(-1);
 
     // Ugly compile time string lengths
     width = sizeof("Press ESC to quit or any button to try again") / sizeof(char);
@@ -272,11 +294,15 @@ void death_message(int starty, int startx, unsigned int score)
     box(death_win, 0 , 0);
     wrefresh(death_win);
 
-    while(getch() != ESC_KEY);
+    sleep (1);
+    getch(); /* get any keys pressed while sleeping and toss them */
+    ch = getch();
 
     werase(death_win);
     wrefresh(death_win);
     delwin(death_win);
+
+    return ch;
 }
 
 
