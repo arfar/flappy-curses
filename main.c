@@ -272,7 +272,7 @@ char death_message(int starty, int startx, unsigned int score)
     char *death_message[] = {
         "                 You have died              ",
         "               Your score was ",
-        "Press ESC to quit or any button to try again",
+        "  Press ESC to quit or enter to try again   ",
     };
     int width, height;
 
@@ -294,9 +294,10 @@ char death_message(int starty, int startx, unsigned int score)
     box(death_win, 0 , 0);
     wrefresh(death_win);
 
-    sleep (1);
-    getch(); /* get any keys pressed while sleeping and toss them */
-    ch = getch();
+    while ((ch = getch()))
+        if ((ch == ESC_KEY) || (ch == '\n'))
+            break;
+
 
     werase(death_win);
     wrefresh(death_win);
