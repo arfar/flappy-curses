@@ -1,0 +1,15 @@
+Source: flappy-curses
+Section: games
+Priority: extra
+Maintainer: Toni Uhlig <matzeton@googlemail.com>
+Build-Depends: debhelper (>= 8.0.0), libncurses5-dev
+Standards-Version: 3.9.3
+Homepage: https://github.com/freecoding/flappy-curses
+#Vcs-Git: ssh://git@github.com:freecoding/flappy-curses.git
+#Vcs-Browser: https://github.com/freecoding/flappy-curses
+
+Package: flappy-curses
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libncurses5
+Description: Flappy Bird game with ncurses
+ A simple console clone for the very famous android original.

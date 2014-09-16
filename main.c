@@ -72,6 +72,7 @@ int main(void)
     while(run_game(flappy, pipes, num_pipes) != ESC_KEY)
         continue;
 
+    free(pipes);
     refresh();
     endwin();
     return 0;
